@@ -317,12 +317,35 @@ int howManyBits(int x) {
  */
 unsigned float_twice(unsigned uf) {
     unsigned exp = uf & 0x7f800000;
-    int nan = exp&0x7f800000;
-    if (nan == 0x0 ) return uf;
-    unsigned two = 0x0;
-    two = uf + 0x800000;
+    unsigned sign = uf&0x80000000;
+    unsigned result = 0x0;
+    int msb = uf&0x7fffff;
     
-    return two;
+    if(exp ==0x7f800000) {
+        return uf;
+    }
+    else if (exp == 0x0){
+        
+        if ((msb&0x400000) == 0x400000){
+            exp = 0x800000;
+            msb = (msb << 1) & 0x7fffff;
+            result = sign + exp + msb;
+            return result;
+        }
+        else{
+            msb = (msb << 1) & 0x4fffff;
+            result = sign + exp + msb;
+            return result;
+        }
+    }
+    
+    else {
+        exp = exp + 0x800000;
+        result = sign + exp + msb;
+    }
+    return result;
+    
+    
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
@@ -336,28 +359,43 @@ unsigned float_twice(unsigned uf) {
 unsigned float_i2f(int x) {
     unsigned result = 0x0;
     unsigned sign = 0x0;
+    unsigned exp = 0x3f800000;
     if (x < 0) {
         sign = 0x80000000;
-        x = -x;
+        x = ~x+1;
     }
     if (x==0) {return 0;}
+    
     result = x;
    
     unsigned count = 0;
+    if (x == 0x80000000)  {
+        result = sign + exp+(31<<23);
+              return result;
+    }
+ 
     while(x!=0x1){
         x = x >> 1;
         count ++;
         
     }
+    printf("%d count\n", count);
     if(count>23){
-        result = result >> (count - 23);}
-    else if(count<23){
-            result = result << (23-count);
+        result = result >> (count - 23);
+        
+        exp = exp + (count << 23);
     }
-    result = result & 0x7fffff;
-    count = (count+0x7f)<<23;
+    else if(count<23){
+        exp = exp + (count << 23);
+        result = result << (23-count);
     
-    result = result + count + sign;
+    }
+    else {
+        exp = exp + (23<<23);
+    }
+    printf("%x exp\n", exp);
+    result = result & 0x7fffff;
+    result = result + exp + sign;
     return result;
 }
 /* 
