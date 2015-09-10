@@ -359,41 +359,58 @@ unsigned float_twice(unsigned uf) {
 unsigned float_i2f(int x) {
     unsigned result = 0x0;
     unsigned sign = 0x0;
-    unsigned exp = 0x3f800000;
+    unsigned count = 0;
+    unsigned exp = 127;
+   
+    
     if (x < 0) {
         sign = 0x80000000;
         x = ~x+1;
     }
     if (x==0) {return 0;}
     
-    result = x;
-   
-    unsigned count = 0;
     if (x == 0x80000000)  {
-        result = sign + exp+(31<<23);
+        result = sign + ((127+31)<<23);
               return result;
     }
- 
+    
+    result = x;
+    
     while(x!=0x1){
         x = x >> 1;
         count ++;
-        
     }
-    printf("%d count\n", count);
-    if(count>23){
-        result = result >> (count - 23);
+    
+    if (count>23){
+        unsigned temp =  (1<<(count-22)) - 1;
+        x = result&temp;
+        if( (x& (temp>>1) ) > ( 1<<(count-24)) )
+            result = result + (1<<(count-23));
         
-        exp = exp + (count << 23);
+        else if ( (x& (temp>>1)) == (1<<(count-24)) && (x& 1<<(count-23)) >0 )
+            result = result + (1<<(count-23));
     }
-    else if(count<23){
-        exp = exp + (count << 23);
-        result = result << (23-count);
+    
+    
+
+    
+    while((result&0xff800000)!=0x800000){
+        if(result>= 0x1<< 24){
+            result = result >> 1;
+            exp++;
+        
+        }
+        else if(result<0x1<<23){
+            result = result << 1;
+            exp--;
+        }
+    
     
     }
-    else {
-        exp = exp + (23<<23);
-    }
-    printf("%x exp\n", exp);
+
+    exp = (exp+23) << 23;
+    
+
     result = result & 0x7fffff;
     result = result + exp + sign;
     return result;
@@ -412,22 +429,41 @@ unsigned float_i2f(int x) {
  */
 int float_f2i(unsigned uf) {
     if(uf==0 ||uf==0x80000000){return 0;}
+    
     unsigned exp = uf & 0x7f800000;
     if (exp == 0x7f800000 ) return 0x80000000u;
    
-    exp = (exp >>23)&0xff - 127;
+    exp = (exp >>23)&0xff;
     unsigned sign =0x0;
     int content =0x0;
     sign =  (uf>>31)&0x1;
     content = (uf&0x7fffff) | 0x800000;
+    unsigned overflow = 0;
+
+    if (exp > 127){
+        
+        while(exp!=127){
+            if (((content&0x80000000 )== 0x80000000) && exp>127)
+            {content = 0x80000000u;
+                overflow = 1;
+                break;
+            }
+            content = content << 1;
+            exp--;
+        }
+   
+    }
+        
+    else if (exp<127){
+        content = 0;
+        overflow = 1;
+    }
     
-    if (exp>23){
-        if (exp>=31) {return uf;}
-        content = content << (exp-23);
+    if(overflow == 0) {
+        
+        content = content >> 23;
+        if(sign == 0x1){
+            content = - content;}
     }
-    else if (exp<23){
-        content = content >> (23-exp);
-    }
-    if(sign == 0x1) {content = -content;}
   return content;
 }
