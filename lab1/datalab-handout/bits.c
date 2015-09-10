@@ -167,8 +167,8 @@ int tmin(void) {
  */
 int isTmax(int x) {
     int temp = 0x0;
-    temp = x + x + 1 + 1;
     int temp1 = 0x0;
+    temp = x + x + 1 + 1;
     temp1 = ~x;
     return (!temp) & !(!temp1);
 
@@ -182,9 +182,9 @@ int isTmax(int x) {
  */
 int allOddBits(int x) {
     int temp = (x>>16)&x;
+    int result =  0x0;
     int temp1 = (temp>>8)&temp;
     temp1 = temp1 & 0xAA;
-    int result =  0x0;
     result = temp1 ^ 0xAA;
     return !result;
 }
@@ -214,10 +214,10 @@ int isAsciiDigit(int x) {
     int temp = 0x30 >> 4;
     int temp1 = x >> 4;
     int temp2 = !(temp^temp1);
+    int temp3 = 0x0;
     temp = ~0x3a + 1;
     temp1 = temp + x;
     temp1 = temp1 >> 31;
-    int temp3 = 0x0;
     temp3 = !((temp1&0xff)^0xff);
     
     
@@ -291,8 +291,8 @@ int logicalNeg(int x) {
 int howManyBits(int x) {
     int sign = x >> 31;
     int num = 0x0;
-    num = sign&(~x+1) + (~sign&x);
     int count = 0;
+    num = sign&(~x+1) + (~sign&x);
     
     
     return count+!(sign&0x1);
@@ -419,16 +419,18 @@ unsigned float_i2f(int x) {
  *   Rating: 4
  */
 int float_f2i(unsigned uf) {
-    if(uf==0 ||uf==0x80000000){return 0;}
+    
     unsigned exp =0x0;
     unsigned content =0x0;
     unsigned overflow = 0x0;
+    unsigned sign =0x0;
+    if(uf==0 ||uf==0x80000000){return 0;}
     exp = uf & 0x7f800000;
     
     if (exp == 0x7f800000 ) return 0x80000000u;
    
     exp = (exp >>23)&0xff;
-    unsigned sign =0x0;
+    
     sign =  (uf>>31)&0x1;
     content = (uf&0x7fffff) | 0x800000;
     
