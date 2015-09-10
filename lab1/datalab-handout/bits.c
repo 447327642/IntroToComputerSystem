@@ -295,6 +295,8 @@ int howManyBits(int x) {
     num = sign&(~x+1) + (~sign&x);
     
     
+    
+    
     return count+!(sign&0x1);
     
   return 0;
@@ -395,19 +397,18 @@ unsigned float_i2f(int x) {
         else if ( (x& (temp1)) == (para1) && (x& para) >0 ){
             result = result + (para);
         }
+        while((result&0xff800000)!=0x800000){
+                result = result >> 1;
+                exp = exp + 0x800000;
+        }
     }
     //now, result is under round, and we can normally shift it
-    while((result&0xff800000)!=0x800000){
-        if(result>= 0x1000000){
-            result = result >> 1;
-            exp = exp + 0x800000;
-        }
-        else if(result<0x800000){
-            result = result << 1;
-            exp = exp - 0x800000;
-        }
-    }
     
+    else {
+        count = 23 - count;
+            result = result << count;
+            exp = exp - ( count << 23 );
+    }
     
     result = (result&0x7fffff) + exp + sign;
     return result;
