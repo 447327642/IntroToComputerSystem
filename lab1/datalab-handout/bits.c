@@ -401,6 +401,7 @@ unsigned float_i2f(int x) {
             exp = exp - 1;
         }
     }
+    
     exp = (exp+23) << 23;
     result = (result&0x7fffff) + exp + sign;
     return result;
