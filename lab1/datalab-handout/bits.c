@@ -371,19 +371,18 @@ unsigned float_i2f(int x) {
         return 0;
     }
     if (x == 0x80000000)  {
-        result = 0xcf000000;
-        return result;
+        return 0xcf000000;
     }
     result = x;
     //decide to shift
     while(x!=0x1){
         x = x >> 1;
-        count ++;
+        count = count + 1;
     }
     //if shift right, calculate the round situation, and change result in advance
     if (count>23){
-        para = 1<<(count-23);
-        temp =  (para<<1) - 1;
+        para = 1<<(count-23); //bit24 detection for round
+        temp =  (para<<1) - 1; //mask for the last few bits
         x = result&temp;
         if( (x& (temp>>1) ) > ( para>>1) )
             result = result + (para);
@@ -395,16 +394,15 @@ unsigned float_i2f(int x) {
     while((result&0xff800000)!=0x800000){
         if(result>= 0x1000000){
             result = result >> 1;
-            exp++;
+            exp = exp + 1;
         }
         else if(result<0x800000){
             result = result << 1;
-            exp--;
+            exp = exp - 1;
         }
     }
     exp = (exp+23) << 23;
-    result = result & 0x7fffff;
-    result = result + exp + sign;
+    result = (result&0x7fffff) + exp + sign;
     return result;
 }
 /* 
