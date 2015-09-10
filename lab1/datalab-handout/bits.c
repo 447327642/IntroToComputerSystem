@@ -143,7 +143,8 @@ int bitXor(int x, int y) {
     
     int temp1 = ~x&y;
     int temp2 = x&~y;
-    return temp1|temp2;
+    int temp3 =  (~temp1)&(~temp2);
+    return ~temp3;
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -165,10 +166,12 @@ int tmin(void) {
  *   Rating: 2
  */
 int isTmax(int x) {
-    int temp = x >> 31;
-    int temp1 = (x+1) >> 31;
-    int result = (temp&0x1)^(temp1&0x1);
-    return result & !(temp^0x0);
+    int temp = 0x0;
+    temp = x + x + 1 + 1;
+    int temp1 = 0x0;
+    temp1 = ~x;
+    return (!temp) & !(!temp1);
+
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -181,7 +184,8 @@ int allOddBits(int x) {
     int temp = (x>>16)&x;
     int temp1 = (temp>>8)&temp;
     temp1 = temp1 & 0xAA;
-    int result =  temp1 ^ 0xAA;
+    int result =  0x0;
+    result = temp1 ^ 0xAA;
     return !result;
 }
 /* 
@@ -210,11 +214,11 @@ int isAsciiDigit(int x) {
     int temp = 0x30 >> 4;
     int temp1 = x >> 4;
     int temp2 = !(temp^temp1);
-    
     temp = ~0x3a + 1;
     temp1 = temp + x;
     temp1 = temp1 >> 31;
-    int temp3 = !((temp1&0xff)^0xff);
+    int temp3 = 0x0;
+    temp3 = !((temp1&0xff)^0xff);
     
     
     return temp2 & temp3;
@@ -286,17 +290,9 @@ int logicalNeg(int x) {
  */
 int howManyBits(int x) {
     int sign = x >> 31;
-    int num = sign&(~x+1) + (~sign&x);
+    int num = 0x0;
+    num = sign&(~x+1) + (~sign&x);
     int count = 0;
-    
-    int a = num >> 28 &0xff;
-    int a2 = num >> 24 &0xff;
-    int b = num >> 20 &0xff;
-    int b2 = num >> 16 &0xff;
-    int c = num >> 12 &0xff;
-    int c2 = num >> 8 &0xff;
-    int d = num >> 4 &0xff;
-    int d2 = num&0xff;
     
     
     return count+!(sign&0x1);
@@ -316,10 +312,14 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-    unsigned exp = uf & 0x7f800000;
-    unsigned sign = uf&0x80000000;
+    unsigned exp = 0x0;
+    unsigned sign = 0x0;
     unsigned result = 0x0;
-    int msb = uf&0x7fffff;
+    int msb = 0x0;
+    
+    exp = uf & 0x7f800000;
+    sign = uf&0x80000000;
+    msb = uf&0x7fffff;
     
     if(exp ==0x7f800000) {
         return uf;
@@ -362,55 +362,46 @@ unsigned float_i2f(int x) {
     unsigned count = 0;
     unsigned exp = 127;
    
-    
     if (x < 0) {
         sign = 0x80000000;
-        x = ~x+1;
+        x = -x;
     }
-    if (x==0) {return 0;}
-    
+    if (x==0) {
+        return 0;
+    }
     if (x == 0x80000000)  {
-        result = sign + ((127+31)<<23);
-              return result;
+        result = sign + ((158)<<23);
+        return result;
     }
     
     result = x;
-    
+    //decide to shift
     while(x!=0x1){
         x = x >> 1;
         count ++;
     }
-    
+    //if shift right, calculate the round situation, and change result in advance
     if (count>23){
         unsigned temp =  (1<<(count-22)) - 1;
         x = result&temp;
         if( (x& (temp>>1) ) > ( 1<<(count-24)) )
             result = result + (1<<(count-23));
-        
-        else if ( (x& (temp>>1)) == (1<<(count-24)) && (x& 1<<(count-23)) >0 )
+        else if ( (x& (temp>>1)) == (1<<(count-24)) && (x& 1<<(count-23)) >0 ){
             result = result + (1<<(count-23));
+        }
     }
-    
-    
-
-    
+    //now, result is under round, and we can normally shift it
     while((result&0xff800000)!=0x800000){
-        if(result>= 0x1<< 24){
+        if(result>= 0x1000000){
             result = result >> 1;
             exp++;
-        
         }
-        else if(result<0x1<<23){
+        else if(result<0x800000){
             result = result << 1;
             exp--;
         }
-    
-    
     }
-
     exp = (exp+23) << 23;
-    
-
     result = result & 0x7fffff;
     result = result + exp + sign;
     return result;
@@ -429,17 +420,18 @@ unsigned float_i2f(int x) {
  */
 int float_f2i(unsigned uf) {
     if(uf==0 ||uf==0x80000000){return 0;}
+    unsigned exp =0x0;
+    unsigned content =0x0;
+    unsigned overflow = 0x0;
+    exp = uf & 0x7f800000;
     
-    unsigned exp = uf & 0x7f800000;
     if (exp == 0x7f800000 ) return 0x80000000u;
    
     exp = (exp >>23)&0xff;
     unsigned sign =0x0;
-    int content =0x0;
     sign =  (uf>>31)&0x1;
     content = (uf&0x7fffff) | 0x800000;
-    unsigned overflow = 0;
-
+    
     if (exp > 127){
         
         while(exp!=127){
@@ -451,9 +443,7 @@ int float_f2i(unsigned uf) {
             content = content << 1;
             exp--;
         }
-   
     }
-        
     else if (exp<127){
         content = 0;
         overflow = 1;
