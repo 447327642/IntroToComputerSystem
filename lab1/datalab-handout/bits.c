@@ -361,7 +361,8 @@ unsigned float_i2f(int x) {
     unsigned sign = 0x0;
     unsigned count = 0;
     unsigned exp = 127;
-   
+    unsigned temp = 0x0;
+    unsigned para = 0x0;
     if (x < 0) {
         sign = 0x80000000;
         x = -x;
@@ -370,10 +371,9 @@ unsigned float_i2f(int x) {
         return 0;
     }
     if (x == 0x80000000)  {
-        result = sign + ((158)<<23);
+        result = 0xcf000000;
         return result;
     }
-    
     result = x;
     //decide to shift
     while(x!=0x1){
@@ -382,12 +382,13 @@ unsigned float_i2f(int x) {
     }
     //if shift right, calculate the round situation, and change result in advance
     if (count>23){
-        unsigned temp =  (1<<(count-22)) - 1;
+        para = 1<<(count-23);
+        temp =  (para<<1) - 1;
         x = result&temp;
-        if( (x& (temp>>1) ) > ( 1<<(count-24)) )
-            result = result + (1<<(count-23));
-        else if ( (x& (temp>>1)) == (1<<(count-24)) && (x& 1<<(count-23)) >0 ){
-            result = result + (1<<(count-23));
+        if( (x& (temp>>1) ) > ( para>>1) )
+            result = result + (para);
+        else if ( (x& (temp>>1)) == (para>>1) && (x& para) >0 ){
+            result = result + (para);
         }
     }
     //now, result is under round, and we can normally shift it
