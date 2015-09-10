@@ -360,9 +360,12 @@ unsigned float_i2f(int x) {
     unsigned result = 0x0;
     unsigned sign = 0x0;
     unsigned count = 0;
-    unsigned exp = 127;
+    unsigned exp = 0x4b000000;
     unsigned temp = 0x0;
+    unsigned temp1 = 0x0;
     unsigned para = 0x0;
+    unsigned para1 = 0x0;
+    
     if (x < 0) {
         sign = 0x80000000;
         x = -x;
@@ -384,9 +387,12 @@ unsigned float_i2f(int x) {
         para = 1<<(count-23); //bit24 detection for round
         temp =  (para<<1) - 1; //mask for the last few bits
         x = result&temp;
-        if( (x& (temp>>1) ) > ( para>>1) )
+        temp1 = temp>>1;
+        para1 = para >>1;
+        
+        if( (x& (temp1) ) > ( para1) )
             result = result + (para);
-        else if ( (x& (temp>>1)) == (para>>1) && (x& para) >0 ){
+        else if ( (x& (temp1)) == (para1) && (x& para) >0 ){
             result = result + (para);
         }
     }
@@ -394,15 +400,15 @@ unsigned float_i2f(int x) {
     while((result&0xff800000)!=0x800000){
         if(result>= 0x1000000){
             result = result >> 1;
-            exp = exp + 1;
+            exp = exp + 0x800000;
         }
         else if(result<0x800000){
             result = result << 1;
-            exp = exp - 1;
+            exp = exp - 0x800000;
         }
     }
     
-    exp = (exp+23) << 23;
+    
     result = (result&0x7fffff) + exp + sign;
     return result;
 }
