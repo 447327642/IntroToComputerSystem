@@ -367,6 +367,7 @@ unsigned float_i2f(int x) {
     unsigned temp1 = 0x0;
     unsigned para = 0x0;
     unsigned para1 = 0x0;
+    unsigned tcount = 0x0;
     
     if (x < 0) {
         sign = 0x80000000;
@@ -384,32 +385,28 @@ unsigned float_i2f(int x) {
         x = x >> 1;
         count = count + 1;
     }
+    tcount = 23 - count;
     //if shift right, calculate the round situation, and change result in advance
     if (count>23){
-        para = 1<<(count-23); //bit24 detection for round
+        para = 1<<(-tcount); //bit24 detection for round
         temp =  (para<<1) - 1; //mask for the last few bits
         x = result&temp;
         temp1 = temp>>1;
         para1 = para >>1;
         
-        if( (x& (temp1) ) > ( para1) )
+        if( (x& (temp1) ) > ( para1)  || ( ( (x&temp1) == para1) && ( (x&para) >0)  ) )
             result = result + (para);
-        else if ( (x& (temp1)) == (para1) && (x& para) >0 ){
-            result = result + (para);
-        }
         while((result&0xff800000)!=0x800000){
                 result = result >> 1;
                 exp = exp + 0x800000;
         }
     }
     //now, result is under round, and we can normally shift it
-    
     else {
-        count = 23 - count;
-            result = result << count;
-            exp = exp - ( count << 23 );
+        
+            result = result << tcount;
+            exp = exp - ( tcount << 23 );
     }
-    
     result = (result&0x7fffff) + exp + sign;
     return result;
 }
