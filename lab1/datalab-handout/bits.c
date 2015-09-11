@@ -394,8 +394,14 @@ unsigned float_i2f(int x) {
         temp1 = temp>>1;
         para1 = para >>1;
         
-        if( (x& (temp1) ) > ( para1)  || ( ( (x&temp1) == para1) && ( (x&para) >0)  ) )
+        if( (x& (temp1) ) > ( para1) )
             result = result + (para);
+        else if ( (x& (temp1)) == (para1) ){
+            if ((x& para) >0) {
+                result = result + (para);
+            }
+            
+        }
         while((result&0xff800000)!=0x800000){
                 result = result >> 1;
                 exp = exp + 0x800000;
